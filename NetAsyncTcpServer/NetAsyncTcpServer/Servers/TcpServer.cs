@@ -80,6 +80,8 @@ namespace NetAsyncTcpServer
         {
             _clients.Remove(client);
             client.Disconnect();
+            if (OnClientDisconnect != null)
+                OnClientDisconnect(client, new EventArgs());
             
         }
 

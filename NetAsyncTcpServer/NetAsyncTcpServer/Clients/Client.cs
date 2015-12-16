@@ -68,6 +68,8 @@ namespace NetAsyncTcpServer
 
         public void Disconnect()
         {
+            if (_state == ClientState.Disconnected)
+                return;
             _client.Client.Shutdown(SocketShutdown.Both);
             _stream.Close();
             _client.Close();

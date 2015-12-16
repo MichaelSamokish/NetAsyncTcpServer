@@ -55,10 +55,6 @@ namespace NetAsyncTcpServer
             _endPoint = _client.Client.LocalEndPoint;
             _receiveBuffer = new byte[bufferSize];
             WaitForRequest();
-            
-            //_listeningReadThread = new Thread(Read);
-            //_listeningReadThread.Start();
-            
         }
 
         public void Send(byte[] data)

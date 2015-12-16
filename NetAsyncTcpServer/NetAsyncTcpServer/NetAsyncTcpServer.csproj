@@ -39,14 +39,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client.cs" />
-    <Compile Include="DataRecivedEventArgs.cs" />
-    <Compile Include="IClient.cs" />
-    <Compile Include="IConnectionClient.cs" />
-    <Compile Include="IServer.cs" />
+    <Compile Include="Clients\Client.cs" />
+    <Compile Include="EventArgs\DataRecivedEventArgs.cs" />
+    <Compile Include="Interfaces\IClient.cs" />
+    <Compile Include="Interfaces\IConnectionClient.cs" />
+    <Compile Include="Interfaces\IServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TcpConnectionClient.cs" />
-    <Compile Include="TcpServer.cs" />
+    <Compile Include="Servers\TcpConnectionClient.cs" />
+    <Compile Include="Servers\TcpServer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
