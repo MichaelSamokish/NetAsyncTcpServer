@@ -78,20 +78,23 @@ namespace NetAsyncTcpServer
 
         public void DisconnectClient(IConnectionClient client)
         {
-            _clients.Remove(client);
+            client.OnDisconnect -= Client_DisconnectClient;
+            client.OnDataReceived -= DataReceived;
             client.Disconnect();
             if (OnClientDisconnect != null)
                 OnClientDisconnect(client, new EventArgs());
+            _clients.Remove(client);
             
         }
 
         private void Client_DisconnectClient(IConnectionClient sender, EventArgs e)
         {
-            sender.OnDisconnect -= Client_DisconnectClient;
-            sender.OnDataReceived -= DataReceived;
-            if(OnClientDisconnect != null)
-                OnClientDisconnect(sender, e);
-            _clients.Remove(sender);
+            DisconnectClient(sender);
+            //sender.OnDisconnect -= Client_DisconnectClient;
+            //sender.OnDataReceived -= DataReceived;
+            //if(OnClientDisconnect != null)
+            //    OnClientDisconnect(sender, e);
+            //_clients.Remove(sender);
         }
 
         public void DisconnectClient(Guid clientUid)
