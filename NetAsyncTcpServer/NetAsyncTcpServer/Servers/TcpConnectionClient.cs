@@ -54,6 +54,7 @@ namespace NetAsyncTcpServer
             _parentServer = parentServer;
             _endPoint = _client.Client.LocalEndPoint;
             _receiveBuffer = new byte[bufferSize];
+            
             WaitForRequest();
         }
 
@@ -80,6 +81,7 @@ namespace NetAsyncTcpServer
         private void WaitForRequest()
         {
             _stream = _client.GetStream();
+            _receiveBuffer = new byte[4];
             _stream.BeginRead(_receiveBuffer, 0, _receiveBuffer.Length, Read, null);
         }
 
@@ -102,21 +104,43 @@ namespace NetAsyncTcpServer
             }
             if (size > 0)
             {
-                List<byte> data = new List<byte>();
-                for (int i = 0; i < size; i++)
+                var packegeSize = BitConverter.ToInt32(_receiveBuffer, 0);
+                if(packegeSize != 0)
                 {
-                    data.Add(_receiveBuffer[i]);
-                }
-                if (data.Count != 0)
-                {
-                    if (OnDataReceived != null)
-                    {
-                        OnDataReceived(this, new DataRecivedEventArgs(data.Count, data.ToArray()));
-                    }
+                    _receiveBuffer = new byte[packegeSize];
+                    byte[] buffer = new byte[packegeSize];
+                    _stream.BeginRead(buffer, 0, buffer.Length, ReadPack, buffer);
                 }
             }
             
             WaitForRequest();
+        }
+
+        private void ReadPack(IAsyncResult result)
+        {
+            int size = 0;
+            try
+            {
+                size = _stream.EndRead(result);
+            }
+            catch (Exception ex)
+            {
+                Disconnect();
+                return;
+            }
+            if (size == 0)
+            {
+                Disconnect();
+                return;
+            }
+            if (size > 0)
+            {
+                if (OnDataReceived != null)
+                {
+                    byte[] res = result.AsyncState as byte[];
+                    OnDataReceived(this, new DataRecivedEventArgs(res.Length, res));
+                }
+            }
         }
 
         

@@ -49,8 +49,13 @@ namespace NetAsyncTcpServer
 
         public void Send(byte[] data)
         {
-            if(State == ClientState.Connected)
+            if (State == ClientState.Connected)
+            {
+                int size = data.Length;
+                var sizeBuffer = BitConverter.GetBytes(size);
+                _stream.Write(sizeBuffer, 0, sizeBuffer.Length);
                 _stream.Write(data, 0, data.Length);
+            }
         }
 
         public void Connect()
