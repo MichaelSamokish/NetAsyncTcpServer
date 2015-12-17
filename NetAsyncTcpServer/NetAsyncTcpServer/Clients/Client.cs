@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NetAsyncTcpServer
@@ -13,6 +14,7 @@ namespace NetAsyncTcpServer
         private TcpClient _client;
         private NetworkStream _stream;
         private byte[] _receiveBuffer;
+        private CancellationTokenSource _readTaskCancelationToken;
 
         private IPAddress _address;
         private int _port;
@@ -65,9 +67,10 @@ namespace NetAsyncTcpServer
             {
                 _state = ClientState.Connected;
                 _stream = _client.GetStream();
+                _readTaskCancelationToken = new CancellationTokenSource();
+                Task.Run(() => ReadTaskCallback(_readTaskCancelationToken.Token), _readTaskCancelationToken.Token);
                 if(OnConnect != null)
                     OnConnect(this, new EventArgs());
-                WaitForRequest();
             }
         }
 
@@ -80,50 +83,54 @@ namespace NetAsyncTcpServer
             _client.Close();
             _client = null;
             _state = ClientState.Disconnected;
+            _readTaskCancelationToken.Cancel();
             if(OnDisconnect != null)
                 OnDisconnect(this, new EventArgs());
         }
 
-        private void WaitForRequest()
+        private void ReadTaskCallback(CancellationToken cancellationToken)
         {
-            _stream = _client.GetStream();
-            _stream.BeginRead(_receiveBuffer, 0, _receiveBuffer.Length, Read, null);
-        }
-
-        private void Read(IAsyncResult result)
-        {
-            int size = 0;
-            try
+            while (true)
             {
-                size = _stream.EndRead(result);
-            }
-            catch (Exception ex)
-            {
-                Disconnect();
-                return;
-            }
-            if (size == 0)
-            {
-                Disconnect();
-                return;
-            }
-            if (size > 0)
-            {
-                List<byte> data = new List<byte>();
-                for (int i = 0; i < size; i++)
+                if (!IsConnected())
                 {
-                    data.Add(_receiveBuffer[i]);
+                    Disconnect();
+                    break;
                 }
-                if (data.Count != 0)
+                try
                 {
+                    _stream = _client.GetStream();
+                }
+                catch (Exception)
+                {
+                    Disconnect();
+                    break;
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+                if (_stream.DataAvailable)
+                {
+                    byte[] sizeBuffer = new byte[sizeof(int)];
+                    _stream.Read(sizeBuffer, 0, sizeBuffer.Length);
+                    int size = BitConverter.ToInt32(sizeBuffer, 0);
+                    byte[] buffer = new byte[size];
+                    _stream.Read(buffer, 0, buffer.Length);
                     if (OnDataReceived != null)
                     {
-                        OnDataReceived(this, new DataRecivedEventArgs(data.Count, data.ToArray()));
+                        OnDataReceived(this, new DataRecivedEventArgs(size, buffer));
                     }
                 }
-            }
 
-            WaitForRequest();
+            }
+        }
+
+        private bool IsConnected()
+        {
+            Socket soc = _client.Client;
+            try
+            {
+                return !(soc.Poll(1, SelectMode.SelectRead) && soc.Available == 0);
+            }
+            catch (SocketException) { return false; }
         }
     }
 }

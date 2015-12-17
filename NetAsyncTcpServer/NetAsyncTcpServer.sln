@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetAsyncTcpServer", "NetAsy
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetAsyncTcpServer.ServerTestRun", "NetAsyncTcpServer.ServerTestRun\NetAsyncTcpServer.ServerTestRun.csproj", "{EB54AF59-63C6-4E6B-BE5A-813CB047484F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeyAsyncTspServer.ClientTestRun", "NeyAsyncTspServer.ClientTestRun\NeyAsyncTspServer.ClientTestRun.csproj", "{68173EB1-4415-4289-8A02-0303A9048AFD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetAsyncTcpServer.ClientTestRun", "NeyAsyncTspServer.ClientTestRun\NetAsyncTcpServer.ClientTestRun.csproj", "{68173EB1-4415-4289-8A02-0303A9048AFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

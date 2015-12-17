@@ -17,6 +17,8 @@ namespace NetAsyncTcpServer
         private byte[] _receiveBuffer;
         private NetworkStream _stream;
 
+        private CancellationTokenSource _readTaskCancelationToken;
+
         private TcpClient _client;
 
         public EndPoint EndPoint
@@ -54,13 +56,15 @@ namespace NetAsyncTcpServer
             _parentServer = parentServer;
             _endPoint = _client.Client.LocalEndPoint;
             _receiveBuffer = new byte[bufferSize];
-            
-            WaitForRequest();
+            _readTaskCancelationToken = new CancellationTokenSource();
+            Task.Run(() => ReadTaskCallback(_readTaskCancelationToken.Token), _readTaskCancelationToken.Token);
         }
 
         public void Send(byte[] data)
         {
             var stream = _client.GetStream();
+            byte[] sizeBuffer = BitConverter.GetBytes(data.Length);
+            stream.Write(sizeBuffer, 0, sizeBuffer.Length);
             stream.Write(data, 0, data.Length);
         }
 
@@ -68,6 +72,7 @@ namespace NetAsyncTcpServer
         {
             _stream.Close();
             _client.Close();
+            _readTaskCancelationToken.Cancel();
             if(OnDisconnect != null)
                 OnDisconnect(this, new EventArgs());
         }
@@ -78,71 +83,50 @@ namespace NetAsyncTcpServer
             _client.Client.Dispose();
         }
 
-        private void WaitForRequest()
+        private void ReadTaskCallback(CancellationToken cancellationToken)
         {
-            _stream = _client.GetStream();
-            _receiveBuffer = new byte[4];
-            _stream.BeginRead(_receiveBuffer, 0, _receiveBuffer.Length, Read, null);
+            while(true)
+            {
+                if (!IsConnected())
+                {
+                    Disconnect();
+                    break;
+                }
+                try
+                {
+                    _stream = _client.GetStream();
+                }
+                catch(Exception)
+                {
+                    Disconnect();
+                    break;
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+                if(_stream.DataAvailable)
+                {
+                    byte[] sizeBuffer = new byte[sizeof(int)];
+                    _stream.Read(sizeBuffer, 0, sizeBuffer.Length);
+                    int size = BitConverter.ToInt32(sizeBuffer, 0);
+                    byte[] buffer = new byte[size];
+                    _stream.Read(buffer, 0, buffer.Length);
+                    if(OnDataReceived != null)
+                    {
+                        OnDataReceived(this,new DataRecivedEventArgs(size,buffer));
+                    }
+                }
+
+            }
         }
 
-        private void Read(IAsyncResult asyn)
+        private bool IsConnected()
         {
-            int size = 0;
+            Socket soc = _client.Client;
             try
             {
-                size = _stream.EndRead(asyn);
+                return !(soc.Poll(1, SelectMode.SelectRead) && soc.Available == 0);
             }
-            catch(Exception ex)
-            {
-                Disconnect();
-                return;
-            }
-            if (size == 0)
-            {
-                Disconnect();
-                return;
-            }
-            if (size > 0)
-            {
-                var packegeSize = BitConverter.ToInt32(_receiveBuffer, 0);
-                if(packegeSize != 0)
-                {
-                    _receiveBuffer = new byte[packegeSize];
-                    byte[] buffer = new byte[packegeSize];
-                    _stream.BeginRead(buffer, 0, buffer.Length, ReadPack, buffer);
-                }
-            }
-            
-            WaitForRequest();
+            catch (SocketException) { return false; }
         }
 
-        private void ReadPack(IAsyncResult result)
-        {
-            int size = 0;
-            try
-            {
-                size = _stream.EndRead(result);
-            }
-            catch (Exception ex)
-            {
-                Disconnect();
-                return;
-            }
-            if (size == 0)
-            {
-                Disconnect();
-                return;
-            }
-            if (size > 0)
-            {
-                if (OnDataReceived != null)
-                {
-                    byte[] res = result.AsyncState as byte[];
-                    OnDataReceived(this, new DataRecivedEventArgs(res.Length, res));
-                }
-            }
-        }
-
-        
     }
 }

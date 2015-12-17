@@ -59,7 +59,6 @@ namespace NetAsyncTcpServer
             }
             _clientAcceptThread = new Thread(AcceptClient);
             _clientAcceptThread.Start();
-
             _state = ServerState.Opened;
             if(OnOpen != null)
                 OnOpen(this,new EventArgs());
@@ -89,11 +88,6 @@ namespace NetAsyncTcpServer
         private void Client_DisconnectClient(IConnectionClient sender, EventArgs e)
         {
             DisconnectClient(sender);
-            //sender.OnDisconnect -= Client_DisconnectClient;
-            //sender.OnDataReceived -= DataReceived;
-            //if(OnClientDisconnect != null)
-            //    OnClientDisconnect(sender, e);
-            //_clients.Remove(sender);
         }
 
         public void DisconnectClient(Guid clientUid)

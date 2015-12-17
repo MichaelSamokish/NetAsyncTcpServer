@@ -7,8 +7,8 @@
     <ProjectGuid>{68173EB1-4415-4289-8A02-0303A9048AFD}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NeyAsyncTspServer.ClientTestRun</RootNamespace>
-    <AssemblyName>NeyAsyncTspServer.ClientTestRun</AssemblyName>
+    <RootNamespace>NetAsyncTcpServer.ClientTestRun</RootNamespace>
+    <AssemblyName>NetAsyncTcpServer.ClientTestRun</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

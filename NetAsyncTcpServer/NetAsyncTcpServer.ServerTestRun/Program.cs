@@ -25,7 +25,7 @@ namespace NetAsyncTcpServer.ServerTestRun
 
         static void server_OnDataRecived(IConnectionClient sender, DataRecivedEventArgs e)
         {
-            Console.WriteLine("Получены данные размером {0} байт", e.Size);
+            Console.WriteLine("Получены данные размером {0} байт\n Содержимое: {1}", e.Size,e.Data[0]);
         }
 
         static void server_OnClientDisconnect(IConnectionClient client, EventArgs e)
@@ -36,6 +36,7 @@ namespace NetAsyncTcpServer.ServerTestRun
         static void server_OnClientConnect(IConnectionClient client, EventArgs e)
         {
             Console.WriteLine("Подключился клиент");
+            client.Send(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
         }
 
         static void server_OnClose(IServer sender, EventArgs e)
