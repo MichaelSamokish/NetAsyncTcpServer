@@ -72,7 +72,6 @@ namespace NetAsyncTcpServer
             _state = ServerState.Closed;
             if(OnClose != null)
                 OnClose(this, new EventArgs());
-            
         }
 
         public void DisconnectClient(IConnectionClient client)

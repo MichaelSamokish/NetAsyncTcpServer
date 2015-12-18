@@ -16,7 +16,7 @@ namespace NetAsyncTcpServer
     public delegate void ClientDataReceivedEventHandler(IClient client, DataRecivedEventArgs e);
     public delegate void ConnectEventHandler(IClient sender, EventArgs e);
     public delegate void DisconnectEventHandler(IClient sender, EventArgs e);
-    public interface IClient
+    public interface IClient : IDisposable
     {
         IPAddress Address { get; }
         int Port { get; }

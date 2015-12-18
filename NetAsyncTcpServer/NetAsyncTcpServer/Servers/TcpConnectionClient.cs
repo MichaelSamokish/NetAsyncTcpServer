@@ -79,8 +79,13 @@ namespace NetAsyncTcpServer
 
         public void Dispose()
         {
+            OnDataReceived = null;
+            OnDisconnect = null;
+            _stream.Close();
+            _stream.Dispose();
             _client.Close();
             _client.Client.Dispose();
+            _client = null;
         }
 
         private void ReadTaskCallback(CancellationToken cancellationToken)

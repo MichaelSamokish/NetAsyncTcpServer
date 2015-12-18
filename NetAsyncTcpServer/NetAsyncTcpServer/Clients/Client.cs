@@ -78,10 +78,8 @@ namespace NetAsyncTcpServer
         {
             if (_state == ClientState.Disconnected)
                 return;
-            _client.Client.Shutdown(SocketShutdown.Both);
             _stream.Close();
             _client.Close();
-            _client = null;
             _state = ClientState.Disconnected;
             _readTaskCancelationToken.Cancel();
             if(OnDisconnect != null)
@@ -119,7 +117,6 @@ namespace NetAsyncTcpServer
                         OnDataReceived(this, new DataRecivedEventArgs(size, buffer));
                     }
                 }
-
             }
         }
 
@@ -131,6 +128,16 @@ namespace NetAsyncTcpServer
                 return !(soc.Poll(1, SelectMode.SelectRead) && soc.Available == 0);
             }
             catch (SocketException) { return false; }
+        }
+
+        public void Dispose()
+        {
+            OnConnect = null;
+            OnDataReceived = null;
+            OnDisconnect = null;
+            _stream.Close();
+            _client.Close();
+            _client = null;
         }
     }
 }

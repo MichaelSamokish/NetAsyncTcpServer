@@ -21,7 +21,5 @@ namespace NetAsyncTcpServer
 
         void Send(byte[] data);
         void Disconnect();
-        void Dispose();
-
     }
 }
