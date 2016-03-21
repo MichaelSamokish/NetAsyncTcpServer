@@ -12,11 +12,11 @@ namespace NetAsyncTcpServer
     public class TcpServer : IServer
     {
         private TcpListener _listener;
-        private Thread _clientAcceptThread;
 
         private ServerState _state;
         private int _listenedPort;
         private List<IConnectionClient> _clients;
+        private bool _canListenFlag = false;
 
         public ServerState State
         {
@@ -57,8 +57,10 @@ namespace NetAsyncTcpServer
             {
                 throw ex;
             }
-            _clientAcceptThread = new Thread(AcceptClient);
-            _clientAcceptThread.Start();
+
+            _canListenFlag = true;
+            StartListening();
+
             _state = ServerState.Opened;
             if(OnOpen != null)
                 OnOpen(this,new EventArgs());
@@ -66,9 +68,8 @@ namespace NetAsyncTcpServer
 
         public void Stop()
         {
+            _canListenFlag = false;
             _listener.Stop();
-            _clientAcceptThread.Abort();
-            _clientAcceptThread.Join();
             _state = ServerState.Closed;
             if(OnClose != null)
                 OnClose(this, new EventArgs());
@@ -138,17 +139,32 @@ namespace NetAsyncTcpServer
             }
         }
 
-        private void AcceptClient()
+        private async void StartListening()
         {
-            while(true)
+            while (_canListenFlag)
             {
-                var client = _listener.AcceptTcpClient();
-                var connectionClient = new TcpConnectionClient(client, this);
-                connectionClient.OnDataReceived += DataReceived;
-                connectionClient.OnDisconnect += Client_DisconnectClient;
-                if(OnClientConnect != null)
-                    OnClientConnect(connectionClient, new EventArgs());
-                _clients.Add(connectionClient);
+                TcpClient client = null;
+                try
+                {
+                     client = await _listener.AcceptTcpClientAsync();
+                }
+                catch(ObjectDisposedException ex)
+                {
+                    _canListenFlag = false;
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+                if(client != null)
+                {
+                    var connectionClient = new TcpConnectionClient(client, this);
+                    connectionClient.OnDataReceived += DataReceived;
+                    connectionClient.OnDisconnect += Client_DisconnectClient;
+                    if (OnClientConnect != null)
+                        OnClientConnect(connectionClient, new EventArgs());
+                    _clients.Add(connectionClient);
+                }
             }
         }
 

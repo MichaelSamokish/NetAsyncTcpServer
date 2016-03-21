@@ -21,6 +21,8 @@ namespace NetAsyncTcpServer
 
         private TcpClient _client;
 
+        private bool _canReadFlag = false;
+
         public EndPoint EndPoint
         {
             get { return _endPoint; }
@@ -87,7 +89,7 @@ namespace NetAsyncTcpServer
             _client.Client.Dispose();
             _client = null;
         }
-
+        
         private void ReadTaskCallback(CancellationToken cancellationToken)
         {
             while(true)
